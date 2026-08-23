@@ -195,7 +195,7 @@ export default function MarketplaceSEOKit({
                 {metadataKeywords.split(",").filter(Boolean).map((tag, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center text-xs px-2.5 py-1 rounded-[4px] bg-white border border-[#ced4da] text-slate-700 font-sans shadow-sm hover:border-[#5bb75b] transition-all cursor-default"
+                    className="inline-flex items-center text-xs px-2.5 py-1 rounded-[4px] bg-slate-100 border border-slate-300 text-slate-900 font-semibold font-sans shadow-sm hover:border-[#5bb75b] transition-all cursor-default"
                   >
                     {tag.trim()}
                   </span>
