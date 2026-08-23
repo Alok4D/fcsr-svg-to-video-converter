@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Film, Loader2, CheckCircle2, AlertCircle, Download } from "lucide-react";
+import { Film, Loader2, CheckCircle2, AlertCircle, Download, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -344,6 +344,7 @@ const DEFAULT_PRESET_METADATA: Record<string, { title: string; keywords: string 
   }
 };
 
+
 export default function VideoConverterPage() {
   const [svgCode, setSvgCode] = useState(SVG_PRESETS[0].code);
   const [resolution, setResolution] = useState("3840x2160"); // 4K default
@@ -377,6 +378,7 @@ export default function VideoConverterPage() {
   const [metadataTitle, setMetadataTitle] = useState("");
   const [metadataKeywords, setMetadataKeywords] = useState("");
   const [isGeneratingMetadata, setIsGeneratingMetadata] = useState(false);
+  const [isMetadataModalOpen, setIsMetadataModalOpen] = useState(false);
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -487,6 +489,8 @@ export default function VideoConverterPage() {
       setMetadataTitle(defaultMeta.title);
       setMetadataKeywords(defaultMeta.keywords);
 
+
+
     } catch (err: any) {
       console.error("Client render error:", err);
       toast.error("Render Failed", {
@@ -533,6 +537,7 @@ export default function VideoConverterPage() {
       setIsGeneratingMetadata(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[#eaeaea] text-[#2e2e2e] selection:bg-[#5bb75b] selection:text-white font-sans">
@@ -710,14 +715,23 @@ export default function VideoConverterPage() {
                   </span>
                 </div>
 
-                <a
-                  href={generatedVideoUrl}
-                  download={videoDetails?.codec === "prores" ? "stock-video-prores.mov" : "stock-video.mp4"}
-                  className="inline-flex items-center justify-center h-8 px-4 rounded-[4px] bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
-                >
-                  <Download className="h-3.5 w-3.5 mr-1.5" />
-                  Download {videoDetails?.codec === "prores" ? "ProRes MOV" : "MP4"}
-                </a>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => setIsMetadataModalOpen(true)}
+                    className="inline-flex items-center justify-center h-8 px-3 rounded-[4px] bg-slate-100 hover:bg-slate-200 border border-[#ced4da] text-[#2e2e2e] text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 mr-1.5 text-[#5bb75b]" />
+                    SEO Metadata
+                  </Button>
+                  <a
+                    href={generatedVideoUrl}
+                    download={videoDetails?.codec === "prores" ? "stock-video-prores.mov" : "stock-video.mp4"}
+                    className="inline-flex items-center justify-center h-8 px-4 rounded-[4px] bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Download className="h-3.5 w-3.5 mr-1.5" />
+                    Download {videoDetails?.codec === "prores" ? "ProRes MOV" : "MP4"}
+                  </a>
+                </div>
               </div>
 
               <div className="p-4 bg-black flex flex-col items-center justify-center w-full">
@@ -765,18 +779,7 @@ export default function VideoConverterPage() {
             </div>
           )}
 
-          {/* Marketplace SEO Kit Card */}
-          {generatedVideoUrl && !isExporting && (
-            <MarketplaceSEOKit
-              metadataTitle={metadataTitle}
-              setMetadataTitle={setMetadataTitle}
-              metadataKeywords={metadataKeywords}
-              setMetadataKeywords={setMetadataKeywords}
-              isGeneratingMetadata={isGeneratingMetadata}
-              onGenerateAIMetadata={handleGenerateAIMetadata}
-              videoDetails={videoDetails}
-            />
-          )}
+
         </section>
       </main>
 
@@ -788,6 +791,36 @@ export default function VideoConverterPage() {
           setBgPattern={setBgPattern}
           onClose={() => setIsFullscreenPreview(false)}
         />
+      )}
+
+      {/* Marketplace SEO Kit Modal */}
+      {isMetadataModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+          onClick={() => setIsMetadataModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-[4px] border border-[#ced4da] shadow-2xl max-w-lg w-full overflow-hidden flex flex-col relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="absolute right-4 top-4 z-10 text-slate-400 hover:text-slate-600 cursor-pointer" onClick={() => setIsMetadataModalOpen(false)}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div className="p-1">
+              <MarketplaceSEOKit
+                metadataTitle={metadataTitle}
+                setMetadataTitle={setMetadataTitle}
+                metadataKeywords={metadataKeywords}
+                setMetadataKeywords={setMetadataKeywords}
+                isGeneratingMetadata={isGeneratingMetadata}
+                onGenerateAIMetadata={handleGenerateAIMetadata}
+                videoDetails={videoDetails}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
