@@ -13,7 +13,7 @@ interface VideoDetails {
   width?: number;
   height?: number;
   fileSize?: string;
-  codec?: "h264" | "prores";
+  codec?: "h264" | "vp9" | "prores";
 }
 
 interface MarketplaceSEOKitProps {
