@@ -349,7 +349,7 @@ export default function VideoConverterPage() {
   const [resolution, setResolution] = useState("3840x2160"); // 4K default
   const [fps, setFps] = useState("30");
   const [duration, setDuration] = useState("5");
-  const [codec, setCodec] = useState<"h264" | "prores">("h264");
+  const [codec, setCodec] = useState<"h264" | "vp9" | "prores">("h264");
   const [isExporting, setIsExporting] = useState(false);
   const [previewKey, setPreviewKey] = useState(0);
   const [isPlayingPreview, setIsPlayingPreview] = useState(true);
@@ -363,7 +363,7 @@ export default function VideoConverterPage() {
     width?: number;
     height?: number;
     fileSize?: string;
-    codec?: "h264" | "prores";
+    codec?: "h264" | "vp9" | "prores";
   } | null>(null);
 
   const [progressState, setProgressState] = useState<{
@@ -454,6 +454,7 @@ export default function VideoConverterPage() {
         height,
         fps: parseInt(fps, 10),
         duration: parsedDuration,
+        codec: codec === 'vp9' ? 'vp9' : 'h264',
         onProgress: (progress, stage) => {
           setProgressState({ progress, stage });
         }
@@ -470,7 +471,7 @@ export default function VideoConverterPage() {
         width,
         height,
         fileSize: `${mb} MB`,
-        codec: codec as 'h264' | 'prores',
+        codec: codec as 'h264' | 'vp9' | 'prores',
       };
       setVideoDetails(details);
 

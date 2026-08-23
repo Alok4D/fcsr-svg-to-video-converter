@@ -6,6 +6,7 @@ export interface ClientRenderOptions {
   height: number;
   fps: number;
   duration: number;
+  codec: 'h264' | 'vp9';
   onProgress: (progress: number, stage: string) => void;
 }
 
@@ -15,6 +16,7 @@ export async function clientRenderVideo({
   height,
   fps,
   duration,
+  codec,
   onProgress,
 }: ClientRenderOptions): Promise<Blob> {
   const totalFrames = Math.max(1, Math.round(duration * fps));
@@ -32,8 +34,9 @@ export async function clientRenderVideo({
   let selectedCodecString = '';
   let encoderConfig: VideoEncoderConfig | null = null;
 
-  // Try H.264 first
-  for (const profile of h264Profiles) {
+  // Try H.264 first if selected
+  if (codec === 'h264') {
+    for (const profile of h264Profiles) {
     const config: VideoEncoderConfig = {
       codec: profile,
       width: width,
@@ -54,6 +57,7 @@ export async function clientRenderVideo({
       // Continue to next profile check
     }
   }
+}
 
   // Fall back to VP9 if H.264 is unsupported
   if (!selectedCodecString) {

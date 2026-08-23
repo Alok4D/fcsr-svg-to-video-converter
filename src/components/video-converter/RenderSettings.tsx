@@ -17,8 +17,8 @@ interface RenderSettingsProps {
   setResolution: (val: string) => void;
   fps: string;
   setFps: (val: string) => void;
-  codec: "h264" | "prores";
-  setCodec: (val: "h264" | "prores") => void;
+  codec: "h264" | "vp9" | "prores";
+  setCodec: (val: "h264" | "vp9" | "prores") => void;
   duration: string;
   setDuration: (val: string) => void;
 }
@@ -76,12 +76,13 @@ export default function RenderSettings({
         {/* Video Codec */}
         <div className="sm:col-span-2 space-y-1.5">
           <Label className="text-xs text-[#6c757d] font-sans">Video Codec</Label>
-          <Select value={codec} onValueChange={(val) => val && setCodec(val as any)} disabled>
-            <SelectTrigger className="w-full h-10 px-3 bg-slate-50 border-[#ced4da] text-[#2e2e2e] text-sm rounded-[4px] cursor-not-allowed">
+          <Select value={codec} onValueChange={(val) => val && setCodec(val as any)}>
+            <SelectTrigger className="w-full h-10 px-3 bg-white border-[#ced4da] text-[#2e2e2e] text-sm rounded-[4px] hover:border-[#5bb75b] focus:ring-1 focus:ring-[#5bb75b] focus-visible:border-[#5bb75b]">
               <SelectValue placeholder="Codec" />
             </SelectTrigger>
             <SelectContent className="bg-white border-[#ced4da] text-[#2e2e2e]">
-              <SelectItem value="h264">H.264 (MP4) - Fast Browser Render</SelectItem>
+              <SelectItem value="h264">H.264 (MP4) - Standard (Recommended)</SelectItem>
+              <SelectItem value="vp9">VP9 (MP4) - Compatibility Fallback</SelectItem>
             </SelectContent>
           </Select>
         </div>
