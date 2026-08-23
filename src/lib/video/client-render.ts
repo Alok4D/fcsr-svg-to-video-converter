@@ -20,41 +20,20 @@ export async function clientRenderVideo({
   const totalFrames = Math.max(1, Math.round(duration * fps));
   onProgress(5, 'Initializing WebCodecs & MP4 Muxer...');
 
-  // 1. Initialize MP4 Muxer
-  const muxer = new Muxer({
-    target: new ArrayBufferTarget(),
-    video: {
-      codec: 'avc',
-      width: width,
-      height: height,
-    },
-    fastStart: 'in-memory',
-  });
-
-  // 2. Initialize WebCodecs VideoEncoder
-  let encodeError: Error | null = null;
-  const encoder = new VideoEncoder({
-    output: (chunk, metadata) => {
-      muxer.addVideoChunk(chunk, metadata);
-    },
-    error: (err) => {
-      console.error('[WebCodecs Encoder Error]:', err);
-      encodeError = err;
-    },
-  });
-
-  // Configure H.264 codec (Test multiple profiles for maximum compatibility)
-  const codecProfiles = [
+  // 1. Determine supported codec profile (prefer H.264, fall back to VP9)
+  const h264Profiles = [
     'avc1.4d401f', // H.264 Main Profile, Level 3.1
     'avc1.4d4028', // H.264 Main Profile, Level 4.0
     'avc1.640028', // H.264 High Profile, Level 4.0
     'avc1.42e01f', // H.264 Baseline Profile, Level 3.1
   ];
 
-  let selectedCodec = '';
+  let selectedCodecType: 'avc' | 'vp9' = 'avc';
+  let selectedCodecString = '';
   let encoderConfig: VideoEncoderConfig | null = null;
 
-  for (const profile of codecProfiles) {
+  // Try H.264 first
+  for (const profile of h264Profiles) {
     const config: VideoEncoderConfig = {
       codec: profile,
       width: width,
@@ -66,7 +45,8 @@ export async function clientRenderVideo({
     try {
       const isSupported = await VideoEncoder.isConfigSupported(config);
       if (isSupported.supported) {
-        selectedCodec = profile;
+        selectedCodecType = 'avc';
+        selectedCodecString = profile;
         encoderConfig = config;
         break;
       }
@@ -75,9 +55,53 @@ export async function clientRenderVideo({
     }
   }
 
-  if (!selectedCodec || !encoderConfig) {
-    throw new Error('H.264 video encoding is not supported in this browser. Please use Chrome or Edge with hardware acceleration enabled.');
+  // Fall back to VP9 if H.264 is unsupported
+  if (!selectedCodecString) {
+    const vp9Config: VideoEncoderConfig = {
+      codec: 'vp09.00.10.08', // VP9 Profile 0, Level 1.0, 8-bit
+      width: width,
+      height: height,
+      bitrate: 20_000_000, // 20 Mbps high quality
+    };
+
+    try {
+      const isSupported = await VideoEncoder.isConfigSupported(vp9Config);
+      if (isSupported.supported) {
+        selectedCodecType = 'vp9';
+        selectedCodecString = 'vp09.00.10.08';
+        encoderConfig = vp9Config;
+      }
+    } catch (e) {
+      // Continue
+    }
   }
+
+  if (!selectedCodecString || !encoderConfig) {
+    throw new Error('Video encoding (H.264/VP9) is not supported in this browser. Please use a modern browser (Chrome or Edge) and verify hardware acceleration is enabled in browser settings.');
+  }
+
+  // 2. Initialize MP4 Muxer with the determined codec
+  const muxer = new Muxer({
+    target: new ArrayBufferTarget(),
+    video: {
+      codec: selectedCodecType,
+      width: width,
+      height: height,
+    },
+    fastStart: 'in-memory',
+  });
+
+  // 3. Initialize WebCodecs VideoEncoder
+  let encodeError: Error | null = null;
+  const encoder = new VideoEncoder({
+    output: (chunk, metadata) => {
+      muxer.addVideoChunk(chunk, metadata);
+    },
+    error: (err) => {
+      console.error('[WebCodecs Encoder Error]:', err);
+      encodeError = err;
+    },
+  });
 
   encoder.configure(encoderConfig);
 
